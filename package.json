@@ -16,6 +16,15 @@
   "categories": [
     "Other"
   ],
+  "keywords": [
+    "audit",
+    "security",
+    "code review",
+    "solidity",
+    "smart contracts",
+    "web3",
+    "blockchain"
+  ],
   "activationEvents": [
     "onStartupFinished"
   ],
