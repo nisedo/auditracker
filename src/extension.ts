@@ -14,7 +14,133 @@ import {
   NoteDecorationProvider,
   NoteHoverProvider,
 } from "./providers/NoteDecorationProvider";
-import { FunctionState, AuditNote } from "./models/types";
+import { FunctionState, AuditNote, DailyProgress } from "./models/types";
+
+interface ProgressTotals {
+  totalFunctions: number;
+  totalRead: number;
+  totalReviewed: number;
+  totalFiles: number;
+  filesFullyRead: number;
+  filesFullyReviewed: number;
+  totalNotes: number;
+}
+
+/**
+ * Generate markdown progress report
+ */
+function generateProgressReport(
+  repoName: string,
+  history: DailyProgress[],
+  totals: ProgressTotals
+): string {
+  const now = new Date();
+  const timestamp = now.toLocaleString();
+
+  // Calculate percentages
+  const readPct = totals.totalFunctions > 0
+    ? ((totals.totalRead / totals.totalFunctions) * 100).toFixed(1)
+    : "0.0";
+  const reviewedPct = totals.totalFunctions > 0
+    ? ((totals.totalReviewed / totals.totalFunctions) * 100).toFixed(1)
+    : "0.0";
+  const filesReadPct = totals.totalFiles > 0
+    ? ((totals.filesFullyRead / totals.totalFiles) * 100).toFixed(1)
+    : "0.0";
+  const filesReviewedPct = totals.totalFiles > 0
+    ? ((totals.filesFullyReviewed / totals.totalFiles) * 100).toFixed(1)
+    : "0.0";
+
+  let report = `# Audit Progress Report - ${repoName}\n\n`;
+  report += `Generated: ${timestamp}\n\n`;
+
+  // Overall Progress
+  report += `## Overall Progress\n\n`;
+  report += `| Metric | Progress | Percentage |\n`;
+  report += `|--------|----------|------------|\n`;
+  report += `| Functions Read | ${totals.totalRead}/${totals.totalFunctions} | ${readPct}% |\n`;
+  report += `| Functions Reviewed | ${totals.totalReviewed}/${totals.totalFunctions} | ${reviewedPct}% |\n`;
+  report += `| Files Read | ${totals.filesFullyRead}/${totals.totalFiles} | ${filesReadPct}% |\n`;
+  report += `| Files Reviewed | ${totals.filesFullyReviewed}/${totals.totalFiles} | ${filesReviewedPct}% |\n`;
+  report += `| Line Notes | ${totals.totalNotes} | - |\n\n`;
+
+  // Daily Activity Summary
+  if (history.length === 0) {
+    report += `## Daily Activity\n\n`;
+    report += `*No activity recorded yet.*\n`;
+    return report;
+  }
+
+  // Sort history by date descending
+  const sortedHistory = [...history].sort((a, b) => b.date.localeCompare(a.date));
+
+  report += `## Daily Activity Summary\n\n`;
+  report += `| Date | Funcs Read | Lines Read | Funcs Reviewed | Lines Reviewed | Files Read | Files Reviewed | Notes |\n`;
+  report += `|------|------------|------------|----------------|----------------|------------|----------------|-------|\n`;
+
+  for (const day of sortedHistory) {
+    const linesRead = day.linesRead || 0;
+    const linesReviewed = day.linesReviewed || 0;
+    report += `| ${day.date} | ${day.functionsRead} | ${linesRead} | ${day.functionsReviewed} | ${linesReviewed} | ${day.filesRead} | ${day.filesReviewed} | ${day.notesAdded} |\n`;
+  }
+
+  report += `\n---\n\n`;
+
+  // Detailed Activity Log
+  report += `## Detailed Activity Log\n\n`;
+
+  for (const day of sortedHistory) {
+    if (day.actions.length === 0) {
+      continue;
+    }
+
+    report += `### ${day.date}\n\n`;
+
+    // Group actions by type
+    const functionsRead = day.actions.filter((a) => a.type === "functionRead");
+    const functionsReviewed = day.actions.filter((a) => a.type === "functionReviewed");
+    const filesRead = day.actions.filter((a) => a.type === "fileRead");
+    const filesReviewed = day.actions.filter((a) => a.type === "fileReviewed");
+    const notesAdded = day.actions.filter((a) => a.type === "noteAdded");
+
+    if (functionsRead.length > 0) {
+      report += `**Functions Read (${functionsRead.length}):**\n`;
+      for (const action of functionsRead) {
+        report += `- \`${action.filePath}\` → \`${action.functionName}\`\n`;
+      }
+      report += `\n`;
+    }
+
+    if (functionsReviewed.length > 0) {
+      report += `**Functions Reviewed (${functionsReviewed.length}):**\n`;
+      for (const action of functionsReviewed) {
+        report += `- \`${action.filePath}\` → \`${action.functionName}\`\n`;
+      }
+      report += `\n`;
+    }
+
+    if (filesRead.length > 0 || filesReviewed.length > 0) {
+      report += `**Files Completed:**\n`;
+      for (const action of filesRead) {
+        report += `- \`${action.filePath}\` (read)\n`;
+      }
+      for (const action of filesReviewed) {
+        report += `- \`${action.filePath}\` (reviewed)\n`;
+      }
+      report += `\n`;
+    }
+
+    if (notesAdded.length > 0) {
+      report += `**Notes Added (${notesAdded.length}):**\n`;
+      for (const action of notesAdded) {
+        report += `- \`${action.filePath}:${action.noteLine}\` - "${action.notePreview}"\n`;
+      }
+      report += `\n`;
+    }
+  }
+
+  return report;
+}
 
 /**
  * Load scope from SCOPE.txt or SCOPE.md file if present
@@ -158,10 +284,16 @@ export async function activate(
     // Add to scope
     vscode.commands.registerCommand(
       "auditTracker.addToScope",
-      async (uri: vscode.Uri) => {
+      async (uri?: vscode.Uri) => {
+        // Use active editor's file if no URI provided (e.g., from command palette)
         if (!uri) {
-          vscode.window.showErrorMessage("No file or folder selected");
-          return;
+          const activeEditor = vscode.window.activeTextEditor;
+          if (activeEditor) {
+            uri = activeEditor.document.uri;
+          } else {
+            vscode.window.showErrorMessage("No file or folder selected");
+            return;
+          }
         }
 
         const files = await scopeManager.addToScope(uri);
@@ -211,7 +343,27 @@ export async function activate(
           return;
         }
 
-        stateManager.setRead(item.functionState.id, true);
+        const func = item.functionState;
+        const wasAlreadyRead = func.readCount > 0;
+
+        stateManager.setRead(func.id, true);
+
+        // Record progress if this is a new read
+        if (!wasAlreadyRead) {
+          const file = stateManager.getFile(func.filePath);
+          const relativePath = file?.relativePath || path.basename(func.filePath);
+          const lineCount = func.endLine - func.startLine + 1;
+          stateManager.recordFunctionRead(relativePath, func.name, lineCount);
+
+          // Check if file is now fully read
+          if (file) {
+            const allRead = file.functions.every(f => f.readCount > 0 || f.id === func.id);
+            if (allRead) {
+              stateManager.recordFileRead(relativePath);
+            }
+          }
+        }
+
         await stateManager.save();
         treeProvider.refresh();
       }
@@ -239,7 +391,34 @@ export async function activate(
           return;
         }
 
-        stateManager.setReviewed(item.functionState.id, true);
+        const func = item.functionState;
+
+        // Can't review a function that hasn't been read
+        if (func.readCount === 0) {
+          vscode.window.showWarningMessage("Function must be read before it can be reviewed");
+          return;
+        }
+
+        const wasAlreadyReviewed = func.isReviewed;
+
+        stateManager.setReviewed(func.id, true);
+
+        // Record progress if this is a new review
+        if (!wasAlreadyReviewed) {
+          const file = stateManager.getFile(func.filePath);
+          const relativePath = file?.relativePath || path.basename(func.filePath);
+          const lineCount = func.endLine - func.startLine + 1;
+          stateManager.recordFunctionReviewed(relativePath, func.name, lineCount);
+
+          // Check if file is now fully reviewed
+          if (file) {
+            const allReviewed = file.functions.every(f => f.isReviewed || f.id === func.id);
+            if (allReviewed) {
+              stateManager.recordFileReviewed(relativePath);
+            }
+          }
+        }
+
         await stateManager.save();
         treeProvider.refresh();
       }
@@ -282,6 +461,38 @@ export async function activate(
         }
 
         stateManager.setEntrypoint(item.functionState.id, false);
+        await stateManager.save();
+        treeProvider.refresh();
+      }
+    ),
+
+    // Hide function
+    vscode.commands.registerCommand(
+      "auditTracker.hideFunction",
+      async (item: FunctionTreeItem) => {
+        if (!item?.functionState) {
+          return;
+        }
+
+        stateManager.setHidden(item.functionState.id, true);
+        await stateManager.save();
+        treeProvider.refresh();
+      }
+    ),
+
+    // Show hidden functions (unhide all in file)
+    vscode.commands.registerCommand(
+      "auditTracker.showHiddenFunctions",
+      async (item: FileTreeItem) => {
+        if (!item?.scopedFile) {
+          return;
+        }
+
+        for (const func of item.scopedFile.functions) {
+          if (func.isHidden) {
+            stateManager.setHidden(func.id, false);
+          }
+        }
         await stateManager.save();
         treeProvider.refresh();
       }
@@ -347,7 +558,7 @@ export async function activate(
         // Remove highlight after 1 second
         setTimeout(() => {
           highlightDecoration.dispose();
-        }, 800);
+        }, 500);
       }
     ),
 
@@ -441,10 +652,10 @@ export async function activate(
         const range = new vscode.Range(note.line, 0, note.line, 0);
         editor.setDecorations(highlightDecoration, [range]);
 
-        // Remove highlight after 800ms
+        // Remove highlight after 500ms
         setTimeout(() => {
           highlightDecoration.dispose();
-        }, 800);
+        }, 500);
       }
     ),
 
@@ -475,6 +686,13 @@ export async function activate(
           updatedAt: Date.now(),
         };
         stateManager.addNote(note);
+
+        // Record progress for note added
+        const relativePath = workspaceRoot && filePath.startsWith(workspaceRoot)
+          ? path.relative(workspaceRoot, filePath)
+          : path.basename(filePath);
+        stateManager.recordNoteAdded(relativePath, line + 1, content);
+
         await stateManager.save();
         notesTreeProvider.refresh();
         noteDecorationProvider.updateDecorations();
@@ -533,6 +751,67 @@ export async function activate(
       notesTreeProvider.refresh();
       noteDecorationProvider.updateDecorations();
     }),
+
+    // Show progress report
+    vscode.commands.registerCommand(
+      "auditTracker.showProgressReport",
+      async () => {
+        if (!workspaceRoot) {
+          vscode.window.showErrorMessage("No workspace folder open");
+          return;
+        }
+
+        const repoName = path.basename(workspaceRoot);
+        const history = stateManager.getProgressHistory();
+        const allFiles = stateManager.getAllFiles();
+        const allFunctions = stateManager.getAllFunctions();
+        const allNotes = stateManager.getNotes().filter((n) => n.type === "line");
+
+        // Calculate current totals
+        const totalFunctions = allFunctions.length;
+        const totalRead = allFunctions.filter((f) => f.readCount > 0).length;
+        const totalReviewed = allFunctions.filter((f) => f.isReviewed).length;
+        const totalFiles = allFiles.length;
+        const filesFullyRead = allFiles.filter((f) =>
+          f.functions.length > 0 && f.functions.every((fn) => fn.readCount > 0)
+        ).length;
+        const filesFullyReviewed = allFiles.filter((f) =>
+          f.functions.length > 0 && f.functions.every((fn) => fn.isReviewed)
+        ).length;
+
+        // Generate report
+        const report = generateProgressReport(
+          repoName,
+          history,
+          {
+            totalFunctions,
+            totalRead,
+            totalReviewed,
+            totalFiles,
+            filesFullyRead,
+            filesFullyReviewed,
+            totalNotes: allNotes.length,
+          }
+        );
+
+        // Write to file and open
+        const reportFileName = `${repoName}-audit-progress.md`;
+        const reportPath = path.join(workspaceRoot, ".vscode", reportFileName);
+        const reportUri = vscode.Uri.file(reportPath);
+
+        // Ensure .vscode directory exists
+        const vscodeDir = vscode.Uri.file(path.join(workspaceRoot, ".vscode"));
+        try {
+          await vscode.workspace.fs.createDirectory(vscodeDir);
+        } catch {
+          // Directory may already exist
+        }
+
+        await vscode.workspace.fs.writeFile(reportUri, Buffer.from(report));
+        const doc = await vscode.workspace.openTextDocument(reportUri);
+        await vscode.window.showTextDocument(doc);
+      }
+    ),
 
     treeView,
     notesTreeView

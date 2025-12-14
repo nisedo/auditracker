@@ -18,6 +18,8 @@ export interface FunctionState {
   isReviewed: boolean;
   /** Whether this function is marked as an entrypoint */
   isEntrypoint: boolean;
+  /** Whether this function is hidden from the panel */
+  isHidden: boolean;
   /** Symbol kind from VSCode (Function, Method, etc.) */
   symbolKind: number;
 }
@@ -89,6 +91,48 @@ export interface LineNote extends BaseNote {
 export type AuditNote = CodebaseNote | FileNote | FunctionNote | LineNote;
 
 /**
+ * Represents a single tracked action for daily progress
+ */
+export interface DailyProgressAction {
+  /** Type of action performed */
+  type: "functionRead" | "functionReviewed" | "fileRead" | "fileReviewed" | "noteAdded";
+  /** Relative path to file */
+  filePath: string;
+  /** Function name (for function actions) */
+  functionName?: string;
+  /** Line count of the function (for function actions) */
+  lineCount?: number;
+  /** Line number (for note actions) */
+  noteLine?: number;
+  /** First ~50 chars of note content (for note actions) */
+  notePreview?: string;
+}
+
+/**
+ * Represents daily progress tracking
+ */
+export interface DailyProgress {
+  /** Date in YYYY-MM-DD format */
+  date: string;
+  /** Functions marked read this day */
+  functionsRead: number;
+  /** Functions marked reviewed this day */
+  functionsReviewed: number;
+  /** Total lines of code read this day */
+  linesRead: number;
+  /** Total lines of code reviewed this day */
+  linesReviewed: number;
+  /** Files fully read this day */
+  filesRead: number;
+  /** Files fully reviewed this day */
+  filesReviewed: number;
+  /** Line notes added this day */
+  notesAdded: number;
+  /** Detailed log of actions */
+  actions: DailyProgressAction[];
+}
+
+/**
  * Root state object persisted to JSON
  */
 export interface AuditTrackerState {
@@ -100,6 +144,8 @@ export interface AuditTrackerState {
   files: Record<string, ScopedFile>;
   /** All notes */
   notes: AuditNote[];
+  /** Daily progress history */
+  progressHistory: DailyProgress[];
   /** Timestamp of last state change */
   lastModified: number;
 }
@@ -112,5 +158,6 @@ export const DEFAULT_STATE: AuditTrackerState = {
   scopePaths: [],
   files: {},
   notes: [],
+  progressHistory: [],
   lastModified: Date.now(),
 };

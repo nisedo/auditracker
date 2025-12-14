@@ -12,6 +12,7 @@ A VSCode extension for tracking code audit progress. Mark files as in-scope, tra
 - **SCOPE File Support**: Auto-load scope from `SCOPE.txt` or `SCOPE.md` at workspace root
 - **Navigation**: Click any function to jump to it with temporary highlighting
 - **Notes**: Take codebase-level notes (markdown file) and line-specific notes
+- **Progress Tracking**: Automatic daily progress tracking with detailed markdown reports
 - **Persistence**: State is saved per-workspace in `.vscode/{repo-name}-audit-tracker.json`
 
 ## Usage
@@ -39,7 +40,16 @@ Functions display with three states:
 - **Read** (eye icon, yellow): Read but not fully reviewed
 - **Reviewed** (check icon, green): Fully reviewed
 
-Right-click or use inline buttons to change status.
+**Workflow**: Functions must be marked as "read" before they can be marked as "reviewed". Right-click or use inline buttons to change status.
+
+### Hiding Functions
+
+Some functions (like abstract declarations or trivial getters) may not need review. Right-click a function and select **Hide Function** to remove it from the panel. Hidden functions:
+- Don't appear in the function list
+- Don't count toward review progress
+- File description shows hidden count (e.g., "3/10 reviewed (2 hidden)")
+
+To restore hidden functions, right-click the file and select **Show Hidden Functions**.
 
 ### Marking Entrypoints
 
@@ -58,6 +68,16 @@ AuditTracker provides two types of notes:
 2. Lines with notes show a gutter icon
 3. Hover over annotated lines to see the note content
 4. Click notes in the Notes panel to navigate to them
+
+### Progress Tracking
+
+AuditTracker automatically tracks your daily audit activity. Use **AuditTracker: Show Progress Report** to generate a markdown report showing:
+
+- **Overall Progress**: Current status of functions and files (read/reviewed counts and percentages)
+- **Daily Activity Summary**: Table of daily counts for functions read/reviewed, lines of code read/reviewed, files completed, and notes added
+- **Detailed Activity Log**: For each day, lists exactly which functions were read/reviewed, which files were completed, and which notes were added
+
+The report is saved to `.vscode/{repo-name}-audit-progress.md` and opens automatically.
 
 ### Panel Information
 
@@ -81,6 +101,9 @@ Each file shows:
 | `AuditTracker: Clear All Tracking State` | Reset all tracking data |
 | `AuditTracker: Open Codebase Notes` | Open the codebase notes markdown file |
 | `AuditTracker: Add Line Note` | Add a note to the current line |
+| `AuditTracker: Show Progress Report` | Generate and open daily progress report |
+| `Hide Function` | Hide a function from the panel (context menu) |
+| `Show Hidden Functions` | Restore all hidden functions in a file (context menu) |
 | `Refresh` | Re-extract symbols from all files |
 
 ## Requirements
@@ -94,16 +117,29 @@ This extension stores state in `.vscode/{repo-name}-audit-tracker.json` within y
 
 Codebase notes are stored in `.vscode/{repo-name}-audittracker-notes.md`.
 
+Progress reports are generated at `.vscode/{repo-name}-audit-progress.md`.
+
 ## Language Support
 
 Works with any language that provides document symbols via VSCode's Language Server Protocol. Includes special handling for:
-- **Solidity**: Cleans up metadata from solidity-visual-auditor extension
+- **Solidity**:
+  - Cleans up metadata from solidity-visual-auditor extension (removes `( complex: X state: ... )` suffixes)
+  - Removes redundant contract name prefixes (e.g., `PolicyBase.onInstall` becomes `onInstall`)
+  - Excludes events from the function panel (only shows functions, methods, modifiers, and constructors)
 
 ## Known Issues
 
 - Duplicate symbols may appear if multiple language servers provide overlapping results (mitigated by line-based deduplication)
 
 ## Release Notes
+
+### 0.2.0
+
+- Daily progress tracking with detailed markdown reports
+- Hide/unhide functions from panel
+- Read-before-review workflow enforcement
+- Solidity: removes contract name prefix, excludes events
+- Faster navigation highlighting (500ms)
 
 ### 0.1.0
 

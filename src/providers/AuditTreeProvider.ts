@@ -15,10 +15,14 @@ export class FileTreeItem extends vscode.TreeItem {
     this.contextValue = "file";
     this.iconPath = vscode.ThemeIcon.File;
 
-    // Show count of functions and reviewed status
-    const total = scopedFile.functions.length;
-    const reviewed = scopedFile.functions.filter((f) => f.isReviewed).length;
-    this.description = `${reviewed}/${total} reviewed`;
+    // Show count of functions and reviewed status (excluding hidden)
+    const visibleFunctions = scopedFile.functions.filter((f) => !f.isHidden);
+    const total = visibleFunctions.length;
+    const reviewed = visibleFunctions.filter((f) => f.isReviewed).length;
+    const hidden = scopedFile.functions.filter((f) => f.isHidden).length;
+    this.description = hidden > 0
+      ? `${reviewed}/${total} reviewed (${hidden} hidden)`
+      : `${reviewed}/${total} reviewed`;
   }
 }
 
@@ -118,8 +122,9 @@ export class AuditTreeProvider
     }
 
     if (element instanceof FileTreeItem) {
-      // File level: return functions sorted by status
-      const sortedFunctions = [...element.scopedFile.functions].sort((a, b) => {
+      // File level: return visible functions sorted by status
+      const visibleFunctions = element.scopedFile.functions.filter((f) => !f.isHidden);
+      const sortedFunctions = [...visibleFunctions].sort((a, b) => {
         // Priority: 0 = unread, 1 = read, 2 = reviewed
         const getPriority = (f: FunctionState): number => {
           if (f.isReviewed) return 2;

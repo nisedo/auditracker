@@ -2,7 +2,7 @@
   "name": "audit-tracker",
   "displayName": "AuditTracker",
   "description": "Track code audit progress by marking files in scope and tracking function review status",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "publisher": "nisedo",
   "license": "MIT",
   "repository": {
@@ -95,6 +95,14 @@
         "title": "Unmark Entrypoint"
       },
       {
+        "command": "auditTracker.hideFunction",
+        "title": "Hide Function"
+      },
+      {
+        "command": "auditTracker.showHiddenFunctions",
+        "title": "Show Hidden Functions"
+      },
+      {
         "command": "auditTracker.addCodebaseNote",
         "title": "AuditTracker: Open Codebase Notes"
       },
@@ -118,6 +126,10 @@
         "command": "auditTracker.refreshNotes",
         "title": "Refresh Notes",
         "icon": "$(refresh)"
+      },
+      {
+        "command": "auditTracker.showProgressReport",
+        "title": "AuditTracker: Show Progress Report"
       }
     ],
     "menus": {
@@ -158,19 +170,9 @@
           "group": "inline@1"
         },
         {
-          "command": "auditTracker.markReviewed",
-          "when": "view == auditTracker.scopeView && viewItem =~ /^functionUnread/",
-          "group": "inline@2"
-        },
-        {
           "command": "auditTracker.markRead",
           "when": "view == auditTracker.scopeView && viewItem =~ /^functionUnread/",
           "group": "audit@1"
-        },
-        {
-          "command": "auditTracker.markReviewed",
-          "when": "view == auditTracker.scopeView && viewItem =~ /^functionUnread/",
-          "group": "audit@2"
         },
         {
           "command": "auditTracker.unmarkRead",
@@ -216,6 +218,16 @@
           "command": "auditTracker.unmarkEntrypoint",
           "when": "view == auditTracker.scopeView && viewItem =~ /Entrypoint$/",
           "group": "entrypoint@1"
+        },
+        {
+          "command": "auditTracker.hideFunction",
+          "when": "view == auditTracker.scopeView && viewItem =~ /^function/",
+          "group": "visibility@1"
+        },
+        {
+          "command": "auditTracker.showHiddenFunctions",
+          "when": "view == auditTracker.scopeView && viewItem == file",
+          "group": "visibility@1"
         },
         {
           "command": "auditTracker.editNote",

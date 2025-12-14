@@ -4,6 +4,7 @@ import {
   AuditTrackerState,
   AuditNote,
   CodebaseNote,
+  DailyProgress,
   DEFAULT_STATE,
   FunctionState,
   ScopedFile,
@@ -116,6 +117,7 @@ export class StateManager {
             readCount: existing.readCount,
             isReviewed: existing.isReviewed,
             isEntrypoint: existing.isEntrypoint,
+            isHidden: existing.isHidden,
           };
         }
         return fn;
@@ -190,6 +192,17 @@ export class StateManager {
     }
   }
 
+  setHidden(functionId: string, isHidden: boolean): void {
+    for (const file of Object.values(this.state.files)) {
+      for (const fn of file.functions) {
+        if (fn.id === functionId) {
+          fn.isHidden = isHidden;
+          return;
+        }
+      }
+    }
+  }
+
   clearAllState(): void {
     this.state = { ...DEFAULT_STATE };
   }
@@ -253,5 +266,94 @@ export class StateManager {
     return (this.state.notes || []).filter(
       (n) => n.type === "line" && n.filePath === filePath
     );
+  }
+
+  // Progress tracking methods
+
+  private getOrCreateTodayProgress(): DailyProgress {
+    const today = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
+    if (!this.state.progressHistory) {
+      this.state.progressHistory = [];
+    }
+    let entry = this.state.progressHistory.find((p) => p.date === today);
+    if (!entry) {
+      entry = {
+        date: today,
+        functionsRead: 0,
+        functionsReviewed: 0,
+        linesRead: 0,
+        linesReviewed: 0,
+        filesRead: 0,
+        filesReviewed: 0,
+        notesAdded: 0,
+        actions: [],
+      };
+      this.state.progressHistory.push(entry);
+    }
+    // Handle migration for existing entries without line counts
+    if (entry.linesRead === undefined) {
+      entry.linesRead = 0;
+    }
+    if (entry.linesReviewed === undefined) {
+      entry.linesReviewed = 0;
+    }
+    return entry;
+  }
+
+  recordFunctionRead(filePath: string, functionName: string, lineCount: number): void {
+    const progress = this.getOrCreateTodayProgress();
+    progress.functionsRead++;
+    progress.linesRead += lineCount;
+    progress.actions.push({
+      type: "functionRead",
+      filePath,
+      functionName,
+      lineCount,
+    });
+  }
+
+  recordFunctionReviewed(filePath: string, functionName: string, lineCount: number): void {
+    const progress = this.getOrCreateTodayProgress();
+    progress.functionsReviewed++;
+    progress.linesReviewed += lineCount;
+    progress.actions.push({
+      type: "functionReviewed",
+      filePath,
+      functionName,
+      lineCount,
+    });
+  }
+
+  recordFileRead(filePath: string): void {
+    const progress = this.getOrCreateTodayProgress();
+    progress.filesRead++;
+    progress.actions.push({
+      type: "fileRead",
+      filePath,
+    });
+  }
+
+  recordFileReviewed(filePath: string): void {
+    const progress = this.getOrCreateTodayProgress();
+    progress.filesReviewed++;
+    progress.actions.push({
+      type: "fileReviewed",
+      filePath,
+    });
+  }
+
+  recordNoteAdded(filePath: string, line: number, noteText: string): void {
+    const progress = this.getOrCreateTodayProgress();
+    progress.notesAdded++;
+    progress.actions.push({
+      type: "noteAdded",
+      filePath,
+      noteLine: line,
+      notePreview: noteText.substring(0, 50) + (noteText.length > 50 ? "..." : ""),
+    });
+  }
+
+  getProgressHistory(): DailyProgress[] {
+    return this.state.progressHistory || [];
   }
 }
