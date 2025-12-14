@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Scope management via Explorer context menu (Add/Remove from Scope)
+- File decorations in Explorer (📌 badge and green color for in-scope files)
 - Function extraction using VSCode's Document Symbol Provider
 - Three-state tracking: unread, read, reviewed
 - Entrypoint marking with visual indicators (rocket icon, arrow prefix)

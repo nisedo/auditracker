@@ -5,6 +5,7 @@ A VSCode extension for tracking code audit progress. Mark files as in-scope, tra
 ## Features
 
 - **Scope Management**: Right-click files or folders in the Explorer to add/remove from audit scope
+- **File Decorations**: In-scope files display a 📌 badge and green color in the Explorer
 - **Function Tracking**: Automatically extracts all functions from in-scope files
 - **Review Status**: Track functions as unread, read, or reviewed
 - **Entrypoints**: Mark critical functions as entrypoints for special visibility

@@ -8,6 +8,7 @@ import {
   FunctionTreeItem,
   FileTreeItem,
 } from "./providers/AuditTreeProvider";
+import { ScopeDecorationProvider } from "./providers/ScopeDecorationProvider";
 import { FunctionState } from "./models/types";
 
 /**
@@ -76,6 +77,7 @@ let stateManager: StateManager;
 let scopeManager: ScopeManager;
 let symbolExtractor: SymbolExtractor;
 let treeProvider: AuditTreeProvider;
+let decorationProvider: ScopeDecorationProvider;
 
 export async function activate(
   context: vscode.ExtensionContext
@@ -89,12 +91,19 @@ export async function activate(
   symbolExtractor = new SymbolExtractor();
   scopeManager = new ScopeManager(stateManager, symbolExtractor, workspaceRoot);
   treeProvider = new AuditTreeProvider(stateManager);
+  decorationProvider = new ScopeDecorationProvider(stateManager);
+
+  // Register file decoration provider
+  context.subscriptions.push(
+    vscode.window.registerFileDecorationProvider(decorationProvider)
+  );
 
   // Load scope from SCOPE.txt or SCOPE.md if present and state is empty
   if (stateManager.getScopePaths().length === 0) {
     const addedFiles = await loadScopeFile(workspaceRoot, scopeManager, stateManager);
     if (addedFiles > 0) {
       treeProvider.refresh();
+      decorationProvider.refreshAll();
     }
   }
 
@@ -118,6 +127,7 @@ export async function activate(
         const files = await scopeManager.addToScope(uri);
         await stateManager.save();
         treeProvider.refresh();
+        decorationProvider.refresh(files.map((f) => vscode.Uri.file(f)));
 
         const functionCount = stateManager
           .getAllFiles()
@@ -148,6 +158,7 @@ export async function activate(
 
         await stateManager.save();
         treeProvider.refresh();
+        decorationProvider.refresh([uri]);
         vscode.window.showInformationMessage("Removed from scope");
       }
     ),
@@ -279,6 +290,9 @@ export async function activate(
 
     // Clear all state
     vscode.commands.registerCommand("auditTracker.clearAllState", async () => {
+      // Get all files before clearing to refresh their decorations
+      const allFiles = stateManager.getAllFiles().map((f) => vscode.Uri.file(f.filePath));
+
       const confirm = await vscode.window.showWarningMessage(
         "Clear all audit tracking state? This cannot be undone.",
         { modal: true },
@@ -289,6 +303,7 @@ export async function activate(
         stateManager.clearAllState();
         await stateManager.save();
         treeProvider.refresh();
+        decorationProvider.refresh(allFiles);
         vscode.window.showInformationMessage("Audit tracking state cleared");
       }
     }),

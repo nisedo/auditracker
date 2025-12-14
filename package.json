@@ -175,7 +175,17 @@
           "group": "entrypoint@1"
         }
       ]
-    }
+    },
+    "colors": [
+      {
+        "id": "auditTracker.scopedFileColor",
+        "description": "Color for files in audit scope",
+        "defaults": {
+          "dark": "#7ad108",
+          "light": "#4a9e00"
+        }
+      }
+    ]
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",
