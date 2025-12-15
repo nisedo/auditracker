@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="icon.png" alt="AuditTracker Logo" width="128" height="128">
+</p>
+
 # AuditTracker
 
 A VSCode extension for tracking code audit progress. Mark files as in-scope, track function review status, identify entrypoints, and take notes.
