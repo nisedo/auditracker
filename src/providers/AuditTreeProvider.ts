@@ -49,21 +49,11 @@ export class FunctionTreeItem extends vscode.TreeItem {
     const isReviewed = functionState.isReviewed;
     const isEntrypoint = functionState.isEntrypoint;
 
-    // Set description based on status
-    const statusParts: string[] = [];
-    if (isEntrypoint) {
-      statusParts.push("entrypoint");
-    }
-    if (isReviewed) {
-      statusParts.push("reviewed");
-    } else if (isRead) {
-      statusParts.push("read");
-    } else {
-      statusParts.push("unread");
-    }
+    // Set description (line count, entrypoint indicator)
     const lineCount = functionState.endLine - functionState.startLine + 1;
-    statusParts.push(`${lineCount} lines`);
-    this.description = statusParts.join(" · ");
+    this.description = isEntrypoint
+      ? `entrypoint · ${lineCount} lines`
+      : `${lineCount} lines`;
 
     // Set context value for menu visibility (includes entrypoint state)
     const entrypointSuffix = isEntrypoint ? "Entrypoint" : "";
@@ -97,7 +87,8 @@ export class FunctionTreeItem extends vscode.TreeItem {
       arguments: [functionState],
     };
 
-    this.tooltip = `${baseName}\nStatus: ${this.description}\nLine: ${functionState.startLine + 1}`;
+    const status = isReviewed ? "reviewed" : isRead ? "read" : "unread";
+    this.tooltip = `${baseName}\nStatus: ${status}\nLines: ${lineCount}\nLine: ${functionState.startLine + 1}`;
   }
 }
 

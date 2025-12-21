@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Solidity: Function names no longer show contract prefix (e.g., `getTransactionCount()` instead of `MultiSigTimelock.getTransactionCount()`) since the file is already displayed above
 - "Mark as Unread" and "Unmark Reviewed" moved from inline buttons to right-click context menu only
+- Removed status text (unread/read/reviewed) from function description - icon already shows status
 
 ## [0.3.0] - 2025-12-21
 
