@@ -31,10 +31,17 @@ export class FileTreeItem extends vscode.TreeItem {
  */
 export class FunctionTreeItem extends vscode.TreeItem {
   constructor(public readonly functionState: FunctionState) {
+    // For Solidity files, strip the contract prefix (e.g., "Contract.func" -> "func")
+    // since the contract name is redundant with the file shown above
+    let baseName = functionState.name;
+    if (functionState.filePath.endsWith(".sol") && baseName.includes(".")) {
+      baseName = baseName.substring(baseName.indexOf(".") + 1);
+    }
+
     // Add arrow marker for entrypoints
     const displayName = functionState.isEntrypoint
-      ? `→ ${functionState.name}`
-      : functionState.name;
+      ? `→ ${baseName}`
+      : baseName;
     super(displayName, vscode.TreeItemCollapsibleState.None);
 
     // Determine status: unread, read, or reviewed
@@ -90,7 +97,7 @@ export class FunctionTreeItem extends vscode.TreeItem {
       arguments: [functionState],
     };
 
-    this.tooltip = `${functionState.name}\nStatus: ${this.description}\nLine: ${functionState.startLine + 1}`;
+    this.tooltip = `${baseName}\nStatus: ${this.description}\nLine: ${functionState.startLine + 1}`;
   }
 }
 

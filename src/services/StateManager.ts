@@ -2,7 +2,6 @@ import * as vscode from "vscode";
 import * as path from "path";
 import {
   AuditTrackerState,
-  AuditNote,
   DailyProgress,
   DEFAULT_STATE,
   FunctionState,
@@ -206,45 +205,6 @@ export class StateManager {
     this.state = { ...DEFAULT_STATE };
   }
 
-  // Note management methods
-
-  addNote(note: AuditNote): void {
-    if (!this.state.notes) {
-      this.state.notes = [];
-    }
-    this.state.notes.push(note);
-  }
-
-  updateNote(id: string, content: string): void {
-    const note = this.state.notes?.find((n) => n.id === id);
-    if (note) {
-      note.content = content;
-      note.updatedAt = Date.now();
-    }
-  }
-
-  deleteNote(id: string): void {
-    if (this.state.notes) {
-      this.state.notes = this.state.notes.filter((n) => n.id !== id);
-    }
-  }
-
-  getNotes(): AuditNote[] {
-    return this.state.notes || [];
-  }
-
-  getNotesForLine(filePath: string, line: number): AuditNote[] {
-    return (this.state.notes || []).filter(
-      (n) => n.type === "line" && n.filePath === filePath && n.line === line
-    );
-  }
-
-  getLineNotesForFile(filePath: string): AuditNote[] {
-    return (this.state.notes || []).filter(
-      (n) => n.type === "line" && n.filePath === filePath
-    );
-  }
-
   // Progress tracking methods
 
   private getOrCreateTodayProgress(): DailyProgress {
@@ -262,12 +222,11 @@ export class StateManager {
         linesReviewed: 0,
         filesRead: 0,
         filesReviewed: 0,
-        notesAdded: 0,
         actions: [],
       };
       this.state.progressHistory.push(entry);
     }
-    // Handle migration for existing entries without line counts
+    // Handle migration for existing entries
     if (entry.linesRead === undefined) {
       entry.linesRead = 0;
     }
@@ -316,17 +275,6 @@ export class StateManager {
     progress.actions.push({
       type: "fileReviewed",
       filePath,
-    });
-  }
-
-  recordNoteAdded(filePath: string, line: number, noteText: string): void {
-    const progress = this.getOrCreateTodayProgress();
-    progress.notesAdded++;
-    progress.actions.push({
-      type: "noteAdded",
-      filePath,
-      noteLine: line,
-      notePreview: noteText.substring(0, 50) + (noteText.length > 50 ? "..." : ""),
     });
   }
 

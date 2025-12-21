@@ -2,7 +2,7 @@
   "name": "audit-tracker",
   "displayName": "AuditTracker",
   "description": "Track code audit progress by marking files in scope and tracking function review status",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "publisher": "nisedo",
   "license": "MIT",
   "repository": {
@@ -44,10 +44,6 @@
         {
           "id": "auditTracker.scopeView",
           "name": "Functions"
-        },
-        {
-          "id": "auditTracker.notesView",
-          "name": "Notes"
         }
       ]
     },
@@ -112,31 +108,6 @@
         "title": "Show Hidden Functions"
       },
       {
-        "command": "auditTracker.addCodebaseNote",
-        "title": "AuditTracker: Open Codebase Notes"
-      },
-      {
-        "command": "auditTracker.addLineNote",
-        "title": "AuditTracker: Add Line Note"
-      },
-      {
-        "command": "auditTracker.goToLineNote",
-        "title": "Go to Line"
-      },
-      {
-        "command": "auditTracker.editNote",
-        "title": "Edit Note"
-      },
-      {
-        "command": "auditTracker.deleteNote",
-        "title": "Delete Note"
-      },
-      {
-        "command": "auditTracker.refreshNotes",
-        "title": "Refresh Notes",
-        "icon": "$(refresh)"
-      },
-      {
         "command": "auditTracker.showProgressReport",
         "title": "AuditTracker: Show Progress Report"
       }
@@ -159,17 +130,6 @@
           "command": "auditTracker.refresh",
           "when": "view == auditTracker.scopeView",
           "group": "navigation"
-        },
-        {
-          "command": "auditTracker.refreshNotes",
-          "when": "view == auditTracker.notesView",
-          "group": "navigation"
-        }
-      ],
-      "editor/context": [
-        {
-          "command": "auditTracker.addLineNote",
-          "group": "audit@1"
         }
       ],
       "view/item/context": [
@@ -237,16 +197,6 @@
           "command": "auditTracker.showHiddenFunctions",
           "when": "view == auditTracker.scopeView && viewItem == file",
           "group": "visibility@1"
-        },
-        {
-          "command": "auditTracker.editNote",
-          "when": "view == auditTracker.notesView && viewItem == note",
-          "group": "notes@1"
-        },
-        {
-          "command": "auditTracker.deleteNote",
-          "when": "view == auditTracker.notesView && viewItem == note",
-          "group": "notes@2"
         }
       ]
     }

@@ -39,49 +39,17 @@ export interface ScopedFile {
 }
 
 /**
- * Base note interface
- */
-export interface BaseNote {
-  /** Unique identifier */
-  id: string;
-  /** Note content (markdown) */
-  content: string;
-  /** Creation timestamp */
-  createdAt: number;
-  /** Last update timestamp */
-  updatedAt: number;
-}
-
-/**
- * Note attached to a specific line
- */
-export interface LineNote extends BaseNote {
-  type: "line";
-  filePath: string;
-  line: number;
-}
-
-/**
- * Note type (currently only line notes are supported)
- */
-export type AuditNote = LineNote;
-
-/**
  * Represents a single tracked action for daily progress
  */
 export interface DailyProgressAction {
   /** Type of action performed */
-  type: "functionRead" | "functionReviewed" | "fileRead" | "fileReviewed" | "noteAdded";
+  type: "functionRead" | "functionReviewed" | "fileRead" | "fileReviewed";
   /** Relative path to file */
   filePath: string;
   /** Function name (for function actions) */
   functionName?: string;
   /** Line count of the function (for function actions) */
   lineCount?: number;
-  /** Line number (for note actions) */
-  noteLine?: number;
-  /** First ~50 chars of note content (for note actions) */
-  notePreview?: string;
 }
 
 /**
@@ -102,8 +70,6 @@ export interface DailyProgress {
   filesRead: number;
   /** Files fully reviewed this day */
   filesReviewed: number;
-  /** Line notes added this day */
-  notesAdded: number;
   /** Detailed log of actions */
   actions: DailyProgressAction[];
 }
@@ -118,8 +84,6 @@ export interface AuditTrackerState {
   scopePaths: string[];
   /** Map of file path to its scoped data */
   files: Record<string, ScopedFile>;
-  /** All notes */
-  notes: AuditNote[];
   /** Daily progress history */
   progressHistory: DailyProgress[];
   /** Timestamp of last state change */
@@ -133,7 +97,6 @@ export const DEFAULT_STATE: AuditTrackerState = {
   version: 1,
   scopePaths: [],
   files: {},
-  notes: [],
   progressHistory: [],
   lastModified: Date.now(),
 };

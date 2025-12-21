@@ -4,7 +4,7 @@
 
 # AuditTracker
 
-A VSCode extension for tracking code audit progress. Mark files as in-scope, track function review status, identify entrypoints, and take notes.
+A VSCode extension for tracking code audit progress. Mark files as in-scope, track function review status, and identify entrypoints.
 
 ## Features
 
@@ -15,7 +15,6 @@ A VSCode extension for tracking code audit progress. Mark files as in-scope, tra
 - **Entrypoints**: Mark critical functions as entrypoints for special visibility
 - **SCOPE File Support**: Auto-load scope from `SCOPE.txt` or `SCOPE.md` at workspace root
 - **Navigation**: Click any function to jump to it with temporary highlighting
-- **Notes**: Take codebase-level notes (markdown file) and line-specific notes
 - **Progress Tracking**: Automatic daily progress tracking with detailed markdown reports
 - **Persistence**: State is saved per-workspace in `.vscode/{repo-name}-audit-tracker.json`
 
@@ -61,25 +60,13 @@ Right-click any function and select **Mark as Entrypoint** to highlight critical
 - Arrow prefix (`→`)
 - "entrypoint" label in the description
 
-### Taking Notes
-
-AuditTracker provides two types of notes:
-
-**Codebase Notes**: A markdown file (`.vscode/{repo-name}-audit-tracker-notes.md`) for free-form notes about the entire codebase. Click "Codebase Notes" in the Notes panel to open it. The file is auto-populated with the git repo URL and commit hash when first created.
-
-**Line Notes**: Attach notes to specific lines of code:
-1. Right-click on a line and select **AuditTracker: Add Line Note**
-2. Lines with notes show a gutter icon
-3. Hover over annotated lines to see the note content
-4. Click notes in the Notes panel to navigate to them
-
 ### Progress Tracking
 
 AuditTracker automatically tracks your daily audit activity. Use **AuditTracker: Show Progress Report** to generate a markdown report showing:
 
 - **Overall Progress**: Current status of functions and files (read/reviewed counts and percentages)
-- **Daily Activity Summary**: Table of daily counts for functions read/reviewed, lines of code read/reviewed, files completed, and notes added
-- **Detailed Activity Log**: For each day, lists exactly which functions were read/reviewed, which files were completed, and which notes were added
+- **Daily Activity Summary**: Table of daily counts for functions read/reviewed, lines of code read/reviewed, and files completed
+- **Detailed Activity Log**: For each day, lists exactly which functions were read/reviewed and which files were completed
 
 The report is saved to `.vscode/{repo-name}-audit-progress.md` and opens automatically.
 
@@ -103,8 +90,6 @@ Each file shows:
 | `AuditTracker: Remove from Scope` | Remove from scope |
 | `AuditTracker: Load Scope File` | Load/reload scope from SCOPE.txt or SCOPE.md |
 | `AuditTracker: Clear All Tracking State` | Reset all tracking data |
-| `AuditTracker: Open Codebase Notes` | Open the codebase notes markdown file |
-| `AuditTracker: Add Line Note` | Add a note to the current line |
 | `AuditTracker: Show Progress Report` | Generate and open daily progress report |
 | `Hide Function` | Hide a function from the panel (context menu) |
 | `Show Hidden Functions` | Restore all hidden functions in a file (context menu) |
@@ -118,8 +103,6 @@ Each file shows:
 ## Extension Settings
 
 This extension stores state in `.vscode/{repo-name}-audit-tracker.json` within your workspace, where `{repo-name}` is the name of your workspace folder.
-
-Codebase notes are stored in `.vscode/{repo-name}-audit-tracker-notes.md`.
 
 Progress reports are generated at `.vscode/{repo-name}-audit-progress.md`.
 
@@ -140,6 +123,10 @@ Works with any language that provides document symbols via VSCode's Language Ser
 
 ## Release Notes
 
+### 0.3.0
+
+- Removed notes feature for a cleaner, focused experience
+
 ### 0.2.0
 
 - Daily progress tracking with detailed markdown reports
@@ -156,8 +143,6 @@ Initial release:
 - Entrypoint marking
 - SCOPE file auto-loading and manual loading command
 - Function navigation with highlighting
-- Codebase notes (markdown file)
-- Line notes with gutter icons, hover, and navigation
 - Per-workspace state persistence with dynamic naming
 
 ## License

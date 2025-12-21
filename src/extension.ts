@@ -9,12 +9,7 @@ import {
   FileTreeItem,
 } from "./providers/AuditTreeProvider";
 import { ScopeDecorationProvider } from "./providers/ScopeDecorationProvider";
-import { NotesTreeProvider, NoteTreeItem } from "./providers/NotesTreeProvider";
-import {
-  NoteDecorationProvider,
-  NoteHoverProvider,
-} from "./providers/NoteDecorationProvider";
-import { FunctionState, AuditNote, DailyProgress } from "./models/types";
+import { FunctionState, DailyProgress } from "./models/types";
 
 interface ProgressTotals {
   totalFunctions: number;
@@ -23,7 +18,6 @@ interface ProgressTotals {
   totalFiles: number;
   filesFullyRead: number;
   filesFullyReviewed: number;
-  totalNotes: number;
 }
 
 /**
@@ -61,8 +55,7 @@ function generateProgressReport(
   report += `| Functions Read | ${totals.totalRead}/${totals.totalFunctions} | ${readPct}% |\n`;
   report += `| Functions Reviewed | ${totals.totalReviewed}/${totals.totalFunctions} | ${reviewedPct}% |\n`;
   report += `| Files Read | ${totals.filesFullyRead}/${totals.totalFiles} | ${filesReadPct}% |\n`;
-  report += `| Files Reviewed | ${totals.filesFullyReviewed}/${totals.totalFiles} | ${filesReviewedPct}% |\n`;
-  report += `| Line Notes | ${totals.totalNotes} | - |\n\n`;
+  report += `| Files Reviewed | ${totals.filesFullyReviewed}/${totals.totalFiles} | ${filesReviewedPct}% |\n\n`;
 
   // Daily Activity Summary
   if (history.length === 0) {
@@ -75,13 +68,13 @@ function generateProgressReport(
   const sortedHistory = [...history].sort((a, b) => b.date.localeCompare(a.date));
 
   report += `## Daily Activity Summary\n\n`;
-  report += `| Date | Funcs Read | Lines Read | Funcs Reviewed | Lines Reviewed | Files Read | Files Reviewed | Notes |\n`;
-  report += `|------|------------|------------|----------------|----------------|------------|----------------|-------|\n`;
+  report += `| Date | Funcs Read | Lines Read | Funcs Reviewed | Lines Reviewed | Files Read | Files Reviewed |\n`;
+  report += `|------|------------|------------|----------------|----------------|------------|----------------|\n`;
 
   for (const day of sortedHistory) {
     const linesRead = day.linesRead || 0;
     const linesReviewed = day.linesReviewed || 0;
-    report += `| ${day.date} | ${day.functionsRead} | ${linesRead} | ${day.functionsReviewed} | ${linesReviewed} | ${day.filesRead} | ${day.filesReviewed} | ${day.notesAdded} |\n`;
+    report += `| ${day.date} | ${day.functionsRead} | ${linesRead} | ${day.functionsReviewed} | ${linesReviewed} | ${day.filesRead} | ${day.filesReviewed} |\n`;
   }
 
   report += `\n---\n\n`;
@@ -101,7 +94,6 @@ function generateProgressReport(
     const functionsReviewed = day.actions.filter((a) => a.type === "functionReviewed");
     const filesRead = day.actions.filter((a) => a.type === "fileRead");
     const filesReviewed = day.actions.filter((a) => a.type === "fileReviewed");
-    const notesAdded = day.actions.filter((a) => a.type === "noteAdded");
 
     if (functionsRead.length > 0) {
       report += `**Functions Read (${functionsRead.length}):**\n`;
@@ -126,14 +118,6 @@ function generateProgressReport(
       }
       for (const action of filesReviewed) {
         report += `- \`${action.filePath}\` (reviewed)\n`;
-      }
-      report += `\n`;
-    }
-
-    if (notesAdded.length > 0) {
-      report += `**Notes Added (${notesAdded.length}):**\n`;
-      for (const action of notesAdded) {
-        report += `- \`${action.filePath}:${action.noteLine}\` - "${action.notePreview}"\n`;
       }
       report += `\n`;
     }
@@ -209,8 +193,6 @@ let scopeManager: ScopeManager;
 let symbolExtractor: SymbolExtractor;
 let treeProvider: AuditTreeProvider;
 let decorationProvider: ScopeDecorationProvider;
-let notesTreeProvider: NotesTreeProvider;
-let noteDecorationProvider: NoteDecorationProvider;
 
 export async function activate(
   context: vscode.ExtensionContext
@@ -231,19 +213,6 @@ export async function activate(
     vscode.window.registerFileDecorationProvider(decorationProvider)
   );
 
-  // Initialize notes providers
-  notesTreeProvider = new NotesTreeProvider(stateManager, workspaceRoot);
-  noteDecorationProvider = new NoteDecorationProvider(stateManager);
-
-  // Register hover provider for line notes (all file types)
-  const noteHoverProvider = new NoteHoverProvider(stateManager);
-  context.subscriptions.push(
-    vscode.languages.registerHoverProvider(
-      { scheme: "file" },
-      noteHoverProvider
-    )
-  );
-
   // Load scope from SCOPE.txt or SCOPE.md if present and state is empty
   if (stateManager.getScopePaths().length === 0) {
     const addedFiles = await loadScopeFile(
@@ -262,22 +231,6 @@ export async function activate(
     treeDataProvider: treeProvider,
     showCollapseAll: true,
   });
-
-  // Register notes tree view
-  const notesTreeView = vscode.window.createTreeView("auditTracker.notesView", {
-    treeDataProvider: notesTreeProvider,
-    showCollapseAll: true,
-  });
-
-  // Update note decorations when active editor changes
-  context.subscriptions.push(
-    vscode.window.onDidChangeActiveTextEditor((editor) => {
-      noteDecorationProvider.setActiveEditor(editor);
-    })
-  );
-
-  // Initial decoration update
-  noteDecorationProvider.setActiveEditor(vscode.window.activeTextEditor);
 
   // Register commands
   context.subscriptions.push(
@@ -579,204 +532,9 @@ export async function activate(
         stateManager.clearAllState();
         await stateManager.save();
         treeProvider.refresh();
-        notesTreeProvider.refresh();
         decorationProvider.refresh(allFiles);
-        noteDecorationProvider.updateDecorations();
         vscode.window.showInformationMessage("AuditTracker state cleared");
       }
-    }),
-
-    // Open codebase notes file
-    vscode.commands.registerCommand(
-      "auditTracker.addCodebaseNote",
-      async () => {
-        if (!workspaceRoot) {
-          vscode.window.showErrorMessage("No workspace folder open");
-          return;
-        }
-
-        const repoName = path.basename(workspaceRoot);
-        const notesFileName = `${repoName}-audit-tracker-notes.md`;
-        const notesPath = path.join(workspaceRoot, ".vscode", notesFileName);
-        const notesUri = vscode.Uri.file(notesPath);
-
-        // Ensure .vscode directory exists
-        const vscodeDir = vscode.Uri.file(path.join(workspaceRoot, ".vscode"));
-        try {
-          await vscode.workspace.fs.createDirectory(vscodeDir);
-        } catch {
-          // Directory may already exist
-        }
-
-        // Create file if it doesn't exist
-        try {
-          await vscode.workspace.fs.stat(notesUri);
-        } catch {
-          // Get git info for the header
-          let commitHash = "";
-          let repoUrl = "";
-          try {
-            const { exec } = require("child_process");
-            const { promisify } = require("util");
-            const execAsync = promisify(exec);
-
-            const commitResult = await execAsync("git rev-parse HEAD", { cwd: workspaceRoot });
-            commitHash = commitResult.stdout.trim();
-
-            const remoteResult = await execAsync("git remote get-url origin", { cwd: workspaceRoot });
-            repoUrl = remoteResult.stdout.trim();
-          } catch {
-            // Not a git repo or git not available
-          }
-
-          let header = `# ${repoName} - Audit Notes\n\n`;
-          if (commitHash || repoUrl) {
-            header += `---\n`;
-            if (repoUrl) {
-              header += `- **Repo**: ${repoUrl}\n`;
-            }
-            if (commitHash) {
-              header += `- **Commit**: ${commitHash}\n`;
-            }
-            header += `---\n\n`;
-          }
-          await vscode.workspace.fs.writeFile(notesUri, Buffer.from(header));
-        }
-
-        // Open the file
-        const doc = await vscode.workspace.openTextDocument(notesUri);
-        await vscode.window.showTextDocument(doc);
-      }
-    ),
-
-    // Go to line note
-    vscode.commands.registerCommand(
-      "auditTracker.goToLineNote",
-      async (note: AuditNote) => {
-        if (!note || note.type !== "line") {
-          return;
-        }
-
-        const uri = vscode.Uri.file(note.filePath);
-        const document = await vscode.workspace.openTextDocument(uri);
-        const editor = await vscode.window.showTextDocument(document);
-
-        const position = new vscode.Position(note.line, 0);
-        editor.selection = new vscode.Selection(position, position);
-        editor.revealRange(
-          new vscode.Range(position, position),
-          vscode.TextEditorRevealType.InCenter
-        );
-
-        // Temporarily highlight the line
-        const highlightDecoration =
-          vscode.window.createTextEditorDecorationType({
-            backgroundColor: new vscode.ThemeColor(
-              "editor.findMatchHighlightBackground"
-            ),
-            isWholeLine: true,
-          });
-        const range = new vscode.Range(note.line, 0, note.line, 0);
-        editor.setDecorations(highlightDecoration, [range]);
-
-        // Remove highlight after 500ms
-        setTimeout(() => {
-          highlightDecoration.dispose();
-        }, 500);
-      }
-    ),
-
-    // Add line note
-    vscode.commands.registerCommand("auditTracker.addLineNote", async () => {
-      const editor = vscode.window.activeTextEditor;
-      if (!editor) {
-        vscode.window.showErrorMessage("No active editor");
-        return;
-      }
-
-      const line = editor.selection.active.line;
-      const filePath = editor.document.uri.fsPath;
-
-      const content = await vscode.window.showInputBox({
-        prompt: `Add note for line ${line + 1}`,
-        placeHolder: "Your line note...",
-      });
-
-      if (content) {
-        const note: AuditNote = {
-          id: `line-${Date.now()}`,
-          type: "line",
-          filePath,
-          line,
-          content,
-          createdAt: Date.now(),
-          updatedAt: Date.now(),
-        };
-        stateManager.addNote(note);
-
-        // Record progress for note added
-        const relativePath = workspaceRoot && filePath.startsWith(workspaceRoot)
-          ? path.relative(workspaceRoot, filePath)
-          : path.basename(filePath);
-        stateManager.recordNoteAdded(relativePath, line + 1, content);
-
-        await stateManager.save();
-        notesTreeProvider.refresh();
-        noteDecorationProvider.updateDecorations();
-      }
-    }),
-
-    // Edit note
-    vscode.commands.registerCommand(
-      "auditTracker.editNote",
-      async (noteOrItem: AuditNote | NoteTreeItem) => {
-        const note =
-          noteOrItem instanceof NoteTreeItem ? noteOrItem.note : noteOrItem;
-        if (!note) {
-          return;
-        }
-
-        const content = await vscode.window.showInputBox({
-          prompt: "Edit note",
-          value: note.content,
-        });
-
-        if (content !== undefined) {
-          stateManager.updateNote(note.id, content);
-          await stateManager.save();
-          notesTreeProvider.refresh();
-          noteDecorationProvider.updateDecorations();
-        }
-      }
-    ),
-
-    // Delete note
-    vscode.commands.registerCommand(
-      "auditTracker.deleteNote",
-      async (item: NoteTreeItem) => {
-        if (!item?.note) {
-          return;
-        }
-
-        const confirm = await vscode.window.showWarningMessage(
-          "Delete this note?",
-          "Yes",
-          "No"
-        );
-
-        if (confirm === "Yes") {
-          stateManager.deleteNote(item.note.id);
-          await stateManager.save();
-          notesTreeProvider.refresh();
-          noteDecorationProvider.updateDecorations();
-        }
-      }
-    ),
-
-    // Refresh notes
-    vscode.commands.registerCommand("auditTracker.refreshNotes", () => {
-      notesTreeProvider.refresh();
-      noteDecorationProvider.updateDecorations();
     }),
 
     // Show progress report
@@ -792,7 +550,6 @@ export async function activate(
         const history = stateManager.getProgressHistory();
         const allFiles = stateManager.getAllFiles();
         const allFunctions = stateManager.getAllFunctions();
-        const allNotes = stateManager.getNotes().filter((n) => n.type === "line");
 
         // Calculate current totals
         const totalFunctions = allFunctions.length;
@@ -817,7 +574,6 @@ export async function activate(
             totalFiles,
             filesFullyRead,
             filesFullyReviewed,
-            totalNotes: allNotes.length,
           }
         );
 
@@ -840,8 +596,7 @@ export async function activate(
       }
     ),
 
-    treeView,
-    notesTreeView
+    treeView
   );
 
   // Watch for file changes to update symbols
