@@ -45,6 +45,8 @@ This is a VSCode extension for tracking code audit progress. The codebase follow
 ### Models (`src/models/types.ts`)
 TypeScript interfaces for all data structures: `FunctionState`, `ScopedFile`, `DailyProgress`, `AuditTrackerState`.
 
+Key `FunctionState` fields: `id`, `name`, `filePath`, `startLine`, `endLine`, `readCount`, `isReviewed`, `isEntrypoint`, `isImportant`, `isHidden`, `symbolKind`.
+
 ### Data Flow
 1. User adds file/folder to scope via context menu
 2. `ScopeManager.addToScope()` expands path, extracts symbols via `SymbolExtractor`

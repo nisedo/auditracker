@@ -13,6 +13,7 @@ A VSCode extension for tracking code audit progress. Mark files as in-scope, tra
 - **Function Tracking**: Automatically extracts all functions from in-scope files
 - **Review Status**: Track functions as unread, read, or reviewed
 - **Entrypoints**: Mark critical functions as entrypoints for special visibility
+- **Important Functions**: Mark high-priority functions that need extra auditor attention
 - **SCOPE File Support**: Auto-load scope from `SCOPE.txt` or `SCOPE.md` at workspace root
 - **Navigation**: Click any function to jump to it with temporary highlighting
 - **Progress Tracking**: Automatic daily progress tracking with detailed markdown reports
@@ -101,6 +102,10 @@ Each file shows:
 | `AuditTracker: Load Scope File` | Load/reload scope from SCOPE.txt or SCOPE.md |
 | `AuditTracker: Clear All Tracking State` | Reset all tracking data |
 | `AuditTracker: Show Progress Report` | Generate and open daily progress report |
+| `Mark as Entrypoint` | Mark function as an entrypoint (context menu) |
+| `Unmark Entrypoint` | Remove entrypoint marking (context menu) |
+| `Mark as Important` | Mark function as high-priority (context menu) |
+| `Unmark Important` | Remove important marking (context menu) |
 | `Hide Function` | Hide a function from the panel (context menu) |
 | `Show Hidden Functions` | Restore all hidden functions in a file (context menu) |
 | `Refresh` | Re-extract symbols from all files |
