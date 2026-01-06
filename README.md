@@ -12,9 +12,9 @@ A VSCode extension for tracking code audit progress. Mark files as in-scope, tra
 - **File Decorations**: In-scope files display a 📌 badge in the Explorer
 - **Function Tracking**: Automatically extracts all functions from in-scope files
 - **Review Status**: Track functions as unread, read, or reviewed
-- **Filtering**: Filter the panel by status and tags (unread/read/reviewed/entrypoint/important)
-- **Entrypoints**: Mark critical functions as entrypoints for special visibility
-- **Important Functions**: Mark high-priority functions that need extra auditor attention
+- **Filtering**: Filter the panel by status and tags (unread/read/reviewed/entrypoint/admin)
+- **Entrypoints**: Mark critical functions as entrypoints for special visibility (❗️)
+- **Admin Functions**: Mark admin/privileged functions for security-focused review (🔐)
 - **SCOPE File Support**: Auto-load scope from `SCOPE.txt` or `SCOPE.md` at workspace root
 - **Navigation**: Click any function to jump to it with temporary highlighting
 - **Progress Tracking**: Automatic daily progress tracking with detailed markdown reports
@@ -61,7 +61,7 @@ Functions display with three states:
 Use **AuditTracker: Filter Functions** (or the filter icon in the panel title) to control which functions are shown.
 
 - Status filters: unread/read/reviewed (you can select any combination)
-- Tag filters: entrypoint/important
+- Tag filters: entrypoint/admin
 
 Filters are combined as: **(status matches) AND (tag matches)**. If you select multiple tags, a function matches if it has **any** selected tag.
 
@@ -79,16 +79,16 @@ To restore hidden functions, right-click the file and select **Show Hidden Funct
 ### Marking Entrypoints
 
 Right-click any function and select **Mark as Entrypoint** to highlight critical entry points. Entrypoints display with:
-- Arrow prefix (`→`)
+- Exclamation prefix (`❗️`)
 - "entrypoint" label in the description
 
-### Marking Important Functions
+### Marking Admin Functions
 
-Right-click any function and select **Mark as Important** to highlight high-priority functions that need extra attention. Important functions display with:
-- Exclamation prefix (`❗`)
-- "important" label in the description
+Right-click any function and select **Mark as Admin** to highlight admin/privileged functions that need security-focused review. Admin functions display with:
+- Lock prefix (`🔐`)
+- "admin" label in the description
 
-Functions can be both entrypoints and important: `→ ❗ transfer()`
+Functions can be both entrypoints and admin: `❗️ 🔐 onlyOwner()`
 
 ### Progress Tracking
 
@@ -104,7 +104,7 @@ The report is saved to `.vscode/{repo-name}-audit-progress.md` and opens automat
 
 Each function shows:
 - Status icon (○ unread, 👁 read, ✓ reviewed)
-- Function name (with → prefix for entrypoints, ❗ prefix for important)
+- Function name (with ❗️ prefix for entrypoints, 🔐 prefix for admin)
 - Line count
 
 Each file shows:
@@ -128,8 +128,8 @@ Each file shows:
 | `AuditTracker: Show Progress Report` | Generate and open daily progress report |
 | `Mark as Entrypoint` | Mark function as an entrypoint (context menu) |
 | `Unmark Entrypoint` | Remove entrypoint marking (context menu) |
-| `Mark as Important` | Mark function as high-priority (context menu) |
-| `Unmark Important` | Remove important marking (context menu) |
+| `Mark as Admin` | Mark function as admin/privileged (context menu) |
+| `Unmark Admin` | Remove admin marking (context menu) |
 | `Hide Function` | Hide a function from the panel (context menu) |
 | `Show Hidden Functions` | Restore all hidden functions in a file (context menu) |
 | `Refresh` | Re-extract symbols from all files |

@@ -18,19 +18,19 @@ export interface FunctionState {
   isReviewed: boolean;
   /** Whether this function is marked as an entrypoint */
   isEntrypoint: boolean;
-  /** Whether this function is marked as important/high-priority */
-  isImportant: boolean;
+  /** Whether this function is marked as an admin function */
+  isAdmin: boolean;
   /** Whether this function is hidden from the panel */
   isHidden: boolean;
 }
 
 export type FunctionStatus = "unread" | "read" | "reviewed";
-export type FunctionTag = "entrypoint" | "important";
+export type FunctionTag = "entrypoint" | "admin";
 
 export interface FunctionFilters {
   /** Function status filters (unread/read/reviewed) */
   statuses: FunctionStatus[];
-  /** Function tag filters (entrypoint/important) */
+  /** Function tag filters (entrypoint/admin) */
   tags: FunctionTag[];
 }
 

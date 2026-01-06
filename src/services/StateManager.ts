@@ -54,7 +54,7 @@ export class StateManager {
     const isFunctionStatus = (value: string): value is FunctionStatus =>
       value === "unread" || value === "read" || value === "reviewed";
     const isFunctionTag = (value: string): value is FunctionTag =>
-      value === "entrypoint" || value === "important";
+      value === "entrypoint" || value === "admin";
 
     const scopePaths = unique(
       Array.isArray(state.scopePaths)
@@ -135,7 +135,7 @@ export class StateManager {
                     typeof fn.readCount === "number" && fn.readCount > 0 ? 1 : 0,
                   isReviewed: Boolean(fn.isReviewed),
                   isEntrypoint: Boolean(fn.isEntrypoint),
-                  isImportant: Boolean(fn.isImportant),
+                  isAdmin: Boolean(fn.isAdmin),
                   isHidden: Boolean(fn.isHidden),
                 };
               })
@@ -262,7 +262,7 @@ export class StateManager {
       (s) => s === "unread" || s === "read" || s === "reviewed"
     );
     const tags = unique(filters.tags).filter(
-      (t) => t === "entrypoint" || t === "important"
+      (t) => t === "entrypoint" || t === "admin"
     );
 
     this.state.functionFilters = {
@@ -352,7 +352,7 @@ export class StateManager {
             readCount: existing.readCount,
             isReviewed: existing.isReviewed,
             isEntrypoint: existing.isEntrypoint,
-            isImportant: existing.isImportant,
+            isAdmin: existing.isAdmin,
             isHidden: existing.isHidden,
           };
         }
@@ -418,11 +418,11 @@ export class StateManager {
     }
   }
 
-  setImportant(functionId: string, isImportant: boolean): void {
+  setAdmin(functionId: string, isAdmin: boolean): void {
     for (const file of Object.values(this.state.files)) {
       for (const fn of file.functions) {
         if (fn.id === functionId) {
-          fn.isImportant = isImportant;
+          fn.isAdmin = isAdmin;
           return;
         }
       }

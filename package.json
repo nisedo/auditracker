@@ -41,8 +41,8 @@
     "onCommand:auditTracker.loadScopeFile",
     "onCommand:auditTracker.markEntrypoint",
     "onCommand:auditTracker.unmarkEntrypoint",
-    "onCommand:auditTracker.markImportant",
-    "onCommand:auditTracker.unmarkImportant",
+    "onCommand:auditTracker.markAdmin",
+    "onCommand:auditTracker.unmarkAdmin",
     "onCommand:auditTracker.hideFunction",
     "onCommand:auditTracker.showHiddenFunctions",
     "onCommand:auditTracker.showProgressReport",
@@ -128,12 +128,12 @@
         "title": "Unmark Entrypoint"
       },
       {
-        "command": "auditTracker.markImportant",
-        "title": "Mark as Important"
+        "command": "auditTracker.markAdmin",
+        "title": "Mark as Admin"
       },
       {
-        "command": "auditTracker.unmarkImportant",
-        "title": "Unmark Important"
+        "command": "auditTracker.unmarkAdmin",
+        "title": "Unmark Admin"
       },
       {
         "command": "auditTracker.hideFunction",
@@ -235,14 +235,14 @@
           "group": "entrypoint@1"
         },
         {
-          "command": "auditTracker.markImportant",
-          "when": "view == auditTracker.scopeView && viewItem =~ /^function/ && viewItem =~ /^(?!.*Important)/",
-          "group": "important@1"
+          "command": "auditTracker.markAdmin",
+          "when": "view == auditTracker.scopeView && viewItem =~ /^function/ && viewItem =~ /^(?!.*Admin)/",
+          "group": "admin@1"
         },
         {
-          "command": "auditTracker.unmarkImportant",
-          "when": "view == auditTracker.scopeView && viewItem =~ /Important/",
-          "group": "important@1"
+          "command": "auditTracker.unmarkAdmin",
+          "when": "view == auditTracker.scopeView && viewItem =~ /Admin/",
+          "group": "admin@1"
         },
         {
           "command": "auditTracker.hideFunction",

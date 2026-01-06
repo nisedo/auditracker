@@ -38,13 +38,13 @@ export class FunctionTreeItem extends vscode.TreeItem {
       baseName = baseName.substring(baseName.indexOf(".") + 1);
     }
 
-    // Build display name with markers: → for entrypoint, ❗ for important
+    // Build display name with markers: ❗️ for entrypoint, 🔐 for admin
     let displayName = baseName;
-    if (functionState.isImportant) {
-      displayName = `❗ ${displayName}`;
+    if (functionState.isAdmin) {
+      displayName = `🔐 ${displayName}`;
     }
     if (functionState.isEntrypoint) {
-      displayName = `→ ${displayName}`;
+      displayName = `❗️ ${displayName}`;
     }
     super(displayName, vscode.TreeItemCollapsibleState.None);
 
@@ -52,25 +52,25 @@ export class FunctionTreeItem extends vscode.TreeItem {
     const isRead = functionState.readCount > 0;
     const isReviewed = functionState.isReviewed;
     const isEntrypoint = functionState.isEntrypoint;
-    const isImportant = functionState.isImportant;
+    const isAdmin = functionState.isAdmin;
 
-    // Set description (line count, entrypoint/important indicators)
+    // Set description (line count, entrypoint/admin indicators)
     const lineCount = functionState.endLine - functionState.startLine + 1;
     const labels: string[] = [];
     if (isEntrypoint) labels.push("entrypoint");
-    if (isImportant) labels.push("important");
+    if (isAdmin) labels.push("admin");
     labels.push(`${lineCount} lines`);
     this.description = labels.join(" · ");
 
-    // Set context value for menu visibility (includes entrypoint and important state)
+    // Set context value for menu visibility (includes entrypoint and admin state)
     const entrypointSuffix = isEntrypoint ? "Entrypoint" : "";
-    const importantSuffix = isImportant ? "Important" : "";
+    const adminSuffix = isAdmin ? "Admin" : "";
     if (isReviewed) {
-      this.contextValue = `functionReviewed${entrypointSuffix}${importantSuffix}`;
+      this.contextValue = `functionReviewed${entrypointSuffix}${adminSuffix}`;
     } else if (isRead) {
-      this.contextValue = `functionRead${entrypointSuffix}${importantSuffix}`;
+      this.contextValue = `functionRead${entrypointSuffix}${adminSuffix}`;
     } else {
-      this.contextValue = `functionUnread${entrypointSuffix}${importantSuffix}`;
+      this.contextValue = `functionUnread${entrypointSuffix}${adminSuffix}`;
     }
 
     // Icon based on status
@@ -167,7 +167,7 @@ export class AuditTreeProvider
     const tagMatches =
       filters.tags.length === 0 ||
       (filters.tags.includes("entrypoint") && func.isEntrypoint) ||
-      (filters.tags.includes("important") && func.isImportant);
+      (filters.tags.includes("admin") && func.isAdmin);
 
     return statusMatches && tagMatches;
   }

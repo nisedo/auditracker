@@ -9,13 +9,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Filter functions in the panel by status and tags (unread/read/reviewed/entrypoint/important)
+- Filter functions in the panel by status and tags (unread/read/reviewed/entrypoint/admin)
+- Admin function marking (🔐) for admin/privileged functions that need security-focused review
+
+### Changed
+
+- Replaced "Important" feature with "Admin" feature (more specific to security auditing use case)
+- Entrypoint indicator changed from arrow (`→`) to exclamation (`❗️`) for better visibility
+- Functions can now be marked as both entrypoint and admin: `❗️ 🔐 onlyOwner()`
+
+### Removed
+
+- "Important" function marking (replaced by "Admin")
 
 ### Fixed
 
 - Default state is now created fresh (prevents accidental shared state between sessions)
-
-### Changed
 
 ## [0.4.0] - 2025-12-25
 

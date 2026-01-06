@@ -53,7 +53,7 @@ AuditTracker intentionally supports **single-folder, local file system workspace
 ### Models (`src/models/types.ts`)
 TypeScript interfaces for all data structures: `FunctionState`, `ScopedFile`, `DailyProgress`, `AuditTrackerState`.
 
-Key `FunctionState` fields: `id`, `name`, `filePath`, `startLine`, `endLine`, `readCount`, `isReviewed`, `isEntrypoint`, `isImportant`, `isHidden`.
+Key `FunctionState` fields: `id`, `name`, `filePath`, `startLine`, `endLine`, `readCount`, `isReviewed`, `isEntrypoint`, `isAdmin`, `isHidden`.
 
 ### Data Flow
 1. User adds file/folder to scope via context menu

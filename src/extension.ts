@@ -151,8 +151,8 @@ const DISABLED_COMMANDS = [
   "auditTracker.loadScopeFile",
   "auditTracker.markEntrypoint",
   "auditTracker.unmarkEntrypoint",
-  "auditTracker.markImportant",
-  "auditTracker.unmarkImportant",
+  "auditTracker.markAdmin",
+  "auditTracker.unmarkAdmin",
   "auditTracker.hideFunction",
   "auditTracker.showHiddenFunctions",
   "auditTracker.showProgressReport",
@@ -232,7 +232,7 @@ function formatFilterMessage(filters: FunctionFilters): string | undefined {
   };
   const labelForTag: Record<FunctionTag, string> = {
     entrypoint: "Entrypoint",
-    important: "Important",
+    admin: "Admin",
   };
 
   const parts: string[] = [];
@@ -651,29 +651,29 @@ export async function activate(
       }
     ),
 
-    // Mark as important
+    // Mark as admin
     vscode.commands.registerCommand(
-      "auditTracker.markImportant",
+      "auditTracker.markAdmin",
       async (item: FunctionTreeItem) => {
         if (!item?.functionState) {
           return;
         }
 
-        stateManager.setImportant(item.functionState.id, true);
+        stateManager.setAdmin(item.functionState.id, true);
         await stateManager.save();
         treeProvider.refresh();
       }
     ),
 
-    // Unmark important
+    // Unmark admin
     vscode.commands.registerCommand(
-      "auditTracker.unmarkImportant",
+      "auditTracker.unmarkAdmin",
       async (item: FunctionTreeItem) => {
         if (!item?.functionState) {
           return;
         }
 
-        stateManager.setImportant(item.functionState.id, false);
+        stateManager.setAdmin(item.functionState.id, false);
         await stateManager.save();
         treeProvider.refresh();
       }
@@ -750,10 +750,10 @@ export async function activate(
           picked: currentFilters.tags.includes("entrypoint"),
         },
         {
-          label: "Important",
+          label: "Admin",
           group: "tag",
-          value: "important",
-          picked: currentFilters.tags.includes("important"),
+          value: "admin",
+          picked: currentFilters.tags.includes("admin"),
         },
       ];
 
