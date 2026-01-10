@@ -56,11 +56,12 @@ TypeScript interfaces for all data structures: `FunctionState`, `ScopedFile`, `D
 Key `FunctionState` fields: `id`, `name`, `filePath`, `startLine`, `endLine`, `readCount`, `isReviewed`, `isEntrypoint`, `isAdmin`, `isHidden`.
 
 ### Data Flow
-1. User adds file/folder to scope via context menu
-2. `ScopeManager.addToScope()` expands path, extracts symbols via `SymbolExtractor`
-3. `StateManager` stores file data and persists to JSON
-4. Tree providers read from `StateManager` and render UI
-5. Decoration providers query `StateManager` to determine badges
+1. On activation, if no scope exists: try SCOPE file → auto-discover source folder (`contracts/`, `src/`, `lib/`, `sources/`)
+2. User can also add file/folder to scope via context menu
+3. `ScopeManager.addToScope()` expands path, extracts symbols via `SymbolExtractor`
+4. `StateManager` stores file data and persists to JSON
+5. Tree providers read from `StateManager` and render UI
+6. Decoration providers query `StateManager` to determine badges
 
 ### Key Files
 - State: `.vscode/{repo-name}-audit-tracker.json`

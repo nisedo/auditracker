@@ -269,6 +269,45 @@ function isWithinWorkspace(workspaceRoot: string, filePath: string): boolean {
 }
 
 /**
+ * Common source folder names to auto-discover
+ */
+const SOURCE_FOLDER_CANDIDATES = [
+  "contracts",
+  "src",
+  "lib",
+  "sources",
+];
+
+/**
+ * Auto-discover source folder if no scope is defined
+ */
+async function autoDiscoverSourceFolder(
+  workspaceRoot: string,
+  scopeManager: ScopeManager,
+  stateManager: StateManager
+): Promise<number> {
+  for (const folderName of SOURCE_FOLDER_CANDIDATES) {
+    const folderPath = path.join(workspaceRoot, folderName);
+    const folderUri = vscode.Uri.file(folderPath);
+
+    try {
+      const stat = await vscode.workspace.fs.stat(folderUri);
+      if (stat.type === vscode.FileType.Directory) {
+        const files = await scopeManager.addToScope(folderUri);
+        if (files.length > 0) {
+          await stateManager.save();
+          return files.length;
+        }
+      }
+    } catch {
+      // Folder doesn't exist, try next
+    }
+  }
+
+  return 0;
+}
+
+/**
  * Load scope from SCOPE.txt or SCOPE.md file if present
  */
 async function loadScopeFile(
@@ -379,11 +418,21 @@ export async function activate(
 
   // Load scope from SCOPE.txt or SCOPE.md if present and state is empty
   if (stateManager.getScopePaths().length === 0) {
-    const addedFiles = await loadScopeFile(
+    let addedFiles = await loadScopeFile(
       workspaceRoot,
       scopeManager,
       stateManager
     );
+
+    // If no SCOPE file found, auto-discover source folder
+    if (addedFiles === 0) {
+      addedFiles = await autoDiscoverSourceFolder(
+        workspaceRoot,
+        scopeManager,
+        stateManager
+      );
+    }
+
     if (addedFiles > 0) {
       treeProvider.refresh();
       decorationProvider.refresh();

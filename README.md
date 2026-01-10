@@ -15,6 +15,7 @@ A VSCode extension for tracking code audit progress. Mark files as in-scope, tra
 - **Filtering**: Filter the panel by status and tags (unread/read/reviewed/entrypoint/admin)
 - **Entrypoints**: Mark critical functions as entrypoints for special visibility (❗️)
 - **Admin Functions**: Mark admin/privileged functions for security-focused review (🔐)
+- **Auto-Discovery**: Automatically loads `contracts/`, `src/`, `lib/`, or `sources/` folder when no scope is defined
 - **SCOPE File Support**: Auto-load scope from `SCOPE.txt` or `SCOPE.md` at workspace root
 - **Navigation**: Click any function to jump to it with temporary highlighting
 - **Progress Tracking**: Automatic daily progress tracking with detailed markdown reports
@@ -24,11 +25,11 @@ A VSCode extension for tracking code audit progress. Mark files as in-scope, tra
 
 ### Adding Files to Scope
 
-1. Right-click a file or folder in the Explorer
-2. Select **AuditTracker: Add to Scope**
-3. Functions will appear in the AuditTracker panel
+**Auto-Discovery**: When you first open a workspace, AuditTracker automatically scans for common source folders (`contracts/`, `src/`, `lib/`, `sources/`) and loads the first one found. No manual setup needed for most projects.
 
-Or create a `SCOPE.txt` / `SCOPE.md` file at your workspace root with one path per line:
+**Manual**: Right-click a file or folder in the Explorer and select **AuditTracker: Add to Scope**.
+
+**SCOPE File**: Create a `SCOPE.txt` or `SCOPE.md` file at your workspace root with one path per line:
 
 ```
 src/contracts/Token.sol
