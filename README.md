@@ -6,6 +6,12 @@
 
 A VSCode extension for tracking code audit progress. Mark files as in-scope, track function review status, and identify entrypoints.
 
+## Installation
+
+```bash
+git clone https://github.com/nisedo/auditracker.git && cd auditracker && npm install && npm run compile && npx vsce package && code --install-extension auditracker-*.vsix --force
+```
+
 ## Features
 
 - **Scope Management**: Right-click files or folders in the Explorer to add/remove from audit scope
@@ -166,13 +172,9 @@ Works with any language that provides document symbols via VSCode's Language Ser
 
 | Language | Recommended Extension |
 |----------|----------------------|
-| Solidity | [Solidity by Ackee Blockchain](https://marketplace.visualstudio.com/items?itemName=AckeeBlockchain.tools-for-solidity) (`AckeeBlockchain.tools-for-solidity`) |
-| Rust | rust-analyzer |
+| Solidity | [Hardhat Solidity](https://marketplace.visualstudio.com/items?itemName=NomicFoundation.hardhat-solidity) (`NomicFoundation.hardhat-solidity`) |
+| Rust | [rust-analyzer](https://marketplace.visualstudio.com/items?itemName=rust-lang.rust-analyzer) (`rust-lang.rust-analyzer`) |
 
 ## Release Notes
 
 See `CHANGELOG.md`.
-
-## License
-
-MIT

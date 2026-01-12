@@ -23,7 +23,7 @@ npm run lint         # Run ESLint
 ## Package and Install
 
 ```bash
-npm run compile && npx vsce package --allow-missing-repository && code --install-extension auditracker-*.vsix --force
+npm run compile && npx vsce package && code --install-extension auditracker-*.vsix --force
 ```
 
 ## Architecture
